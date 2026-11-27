@@ -1,0 +1,336 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Projeto: Trabalho_VVS
+    Disciplina: Verificação e Validação de Sistemas
+    Descrição: Evolução do projeto de JPA (clínica médica) para uma aplicação
+               Quarkus com API REST, testes unitários, de componente e de sistema,
+               análise estática (PMD) e cobertura de código (JaCoCo).
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>edu.ifrs</groupId>
+    <artifactId>Trabalho_VVS</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    <name>Trabalho_VVS</name>
+    <description>Trabalho de Verificação e Validação de Sistemas - Clínica Médica (Quarkus)</description>
+
+    <properties>
+        <compiler-plugin.version>3.15.0</compiler-plugin.version>
+        <maven.compiler.release>25</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
+        <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
+        <quarkus.platform.version>3.39.2</quarkus.platform.version>
+        <surefire-plugin.version>3.5.6</surefire-plugin.version>
+        <jacoco-plugin.version>0.8.13</jacoco-plugin.version>
+        <pmd-plugin.version>3.28.0</pmd-plugin.version>
+
+        <!--
+            Os testes de integração (*IT) fazem parte da estratégia de teste de sistema.
+            Mantidos habilitados para que "mvn verify" execute a suíte completa.
+        -->
+        <skipITs>false</skipITs>
+
+        <!-- Cobertura mínima exigida pelo plano de teste (verificada pelo JaCoCo) -->
+        <cobertura.minima.linhas>0.80</cobertura.minima.linhas>
+        <cobertura.minima.ramificacoes>0.55</cobertura.minima.ramificacoes>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>${quarkus.platform.group-id}</groupId>
+                <artifactId>${quarkus.platform.artifact-id}</artifactId>
+                <version>${quarkus.platform.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <!-- Núcleo Quarkus / CDI -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-arc</artifactId>
+        </dependency>
+
+        <!-- API REST (Jakarta REST + serialização JSON) -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-rest</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-rest-jackson</artifactId>
+        </dependency>
+
+        <!-- Persistência: Hibernate ORM com Jakarta Persistence -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-hibernate-orm</artifactId>
+        </dependency>
+
+        <!-- Driver MySQL (ambiente de produção/desenvolvimento) -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jdbc-mysql</artifactId>
+        </dependency>
+
+        <!-- Dependências exclusivas de teste -->
+
+        <!-- Banco em memória usado nos testes de componente e de sistema -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jdbc-h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Suporte a JUnit 5 no Quarkus (inclui a extensão de Mockito) -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-junit5-mockito</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Cliente HTTP para testes de componente e de sistema -->
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Cobertura de código com JaCoCo integrada ao Quarkus -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jacoco</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>${quarkus.platform.group-id}</groupId>
+                <artifactId>quarkus-maven-plugin</artifactId>
+                <version>${quarkus.platform.version}</version>
+                <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>build</goal>
+                            <goal>generate-code</goal>
+                            <goal>generate-code-tests</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${compiler-plugin.version}</version>
+                <configuration>
+                    <parameters>true</parameters>
+                </configuration>
+            </plugin>
+
+            <!-- Testes unitários e de componente (*Test) -->
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${surefire-plugin.version}</version>
+                <configuration>
+                    <systemPropertyVariables>
+                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                        <maven.home>${maven.home}</maven.home>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+
+            <!-- Testes de sistema / ponta a ponta (*IT), executados na fase verify -->
+            <plugin>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>${surefire-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <systemPropertyVariables>
+                        <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+                        <maven.home>${maven.home}</maven.home>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+
+            <!--
+                Análise estática com PMD.
+                Gera os relatórios HTML e XML em target/pmd e também copia o relatório
+                XML para docs/relatorios/pmd, permitindo versioná-lo no repositório.
+                Violações de prioridade 1 e 2 interrompem o build (qualidade obrigatória).
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>${pmd-plugin.version}</version>
+                <configuration>
+                    <rulesets>
+                        <ruleset>${project.basedir}/config/pmd/regras-pmd.xml</ruleset>
+                    </rulesets>
+                    <!--
+                        A análise cobre apenas o código de produção. O código de teste
+                        é verificado pela execução da própria suíte (240 casos de
+                        unidade/componente + 7 de sistema); incluí-lo no PMD gerava
+                        centenas de avisos cosméticos sem relação com defeitos.
+                        Detalhes e justificativa: docs/relatorios/README.md.
+                    -->
+                    <includeTests>false</includeTests>
+                    <printFailingErrors>true</printFailingErrors>
+                    <linkXRef>false</linkXRef>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>analise-estatica-pmd</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <failOnViolation>true</failOnViolation>
+                            <failurePriority>2</failurePriority>
+                            <format>xml</format>
+                            <outputDirectory>${project.build.directory}/pmd</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>relatorio-pmd-html</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>pmd</goal>
+                        </goals>
+                        <configuration>
+                            <format>html</format>
+                            <outputDirectory>${project.build.directory}/pmd</outputDirectory>
+                            <targetDirectory>${project.build.directory}/pmd</targetDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Cópia do relatório do PMD para o repositório (docs/) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>publicar-relatorio-pmd</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <mkdir dir="${project.basedir}/docs/relatorios/pmd"/>
+                                <copy todir="${project.basedir}/docs/relatorios/pmd" overwrite="true"
+                                      failonerror="false">
+                                    <fileset dir="${project.build.directory}/pmd">
+                                        <include name="**/*.html"/>
+                                        <include name="**/*.xml"/>
+                                    </fileset>
+                                </copy>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--
+                Cobertura de código (JaCoCo).
+                A extensão quarkus-jacoco instrumenta a aplicação durante os testes e
+                grava os dados em jacoco-quarkus.exec (raiz do projeto) e o relatório
+                HTML em target/jacoco-report. Os goals abaixo reaproveitam esse mesmo
+                arquivo para gerar o relatório em target/site/jacoco e verificar os
+                limites mínimos definidos no plano de teste.
+            -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>relatorio-cobertura</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                        <configuration>
+                            <!-- A extensão quarkus-jacoco grava o arquivo na raiz do projeto. -->
+                            <dataFile>${project.basedir}/jacoco-quarkus.exec</dataFile>
+                            <outputDirectory>${project.build.directory}/site/jacoco</outputDirectory>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>verificacao-cobertura</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <!-- Mesmo arquivo de dados gerado pela extensão quarkus-jacoco. -->
+                            <dataFile>${project.basedir}/jacoco-quarkus.exec</dataFile>
+                            <rules>
+                                <rule>
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${cobertura.minima.linhas}</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>${cobertura.minima.ramificacoes}</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>native</id>
+            <activation>
+                <property>
+                    <name>native</name>
+                </property>
+            </activation>
+            <properties>
+                <quarkus.package.jar.enabled>false</quarkus.package.jar.enabled>
+                <skipITs>false</skipITs>
+                <quarkus.native.enabled>true</quarkus.native.enabled>
+            </properties>
+        </profile>
+    </profiles>
+
+</project>

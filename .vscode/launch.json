@@ -1,0 +1,12 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Executar TestesMapeamentos2",
+            "request": "launch",
+            "mainClass": "testes.TestesMapeamentos2",
+            "projectName": "trabalho2_JPA"
+        }
+    ]
+}

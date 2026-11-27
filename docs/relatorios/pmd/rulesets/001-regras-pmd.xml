@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Conjunto de regras PMD utilizado na análise estática do Trabalho_VVS.
+
+    Escopo: o PMD é aplicado a TODO o código-fonte (produção e testes), mas as
+    regras exclusivamente cosméticas de teste foram desativadas. A justificativa
+    é que as asserções da suíte já possuem mensagens descritivas nos casos em que
+    a falha não é autoexplicativa (por exemplo, coleções e listas de detalhes),
+    enquanto asserções simples (assertEquals de um atributo) não se beneficiam de
+    mensagem redundante. O build falha apenas para violações de prioridade 1 e 2
+    (ver maven-pmd-plugin no pom.xml), de modo que o gate de qualidade prioriza
+    defeitos reais e não estilo.
+-->
+<ruleset name="Regras Trabalho VVS">
+
+    <description>Regras de análise estática do projeto Trabalho_VVS</description>
+
+    <!-- Erros potenciais: nulos, recursos não fechados, comparações suspeitas, etc. -->
+    <rule ref="category/java/errorprone.xml">
+        <!-- Classes de entidade/DTO não precisam de construtor privado. -->
+        <exclude name="MissingStaticMethodInNonInstantiatableClass"/>
+    </rule>
+
+    <!-- Boas práticas: exceções, coleções, uso de APIs e testes. -->
+    <rule ref="category/java/bestpractices.xml">
+        <!-- Desativada: gera ruído em POJOs de entidade sem impacto de qualidade real. -->
+        <exclude name="LoosePackageCoupling"/>
+        <!-- As regras abaixo avaliam apenas estilo dos testes; ver justificativa no header. -->
+        <exclude name="UnitTestAssertionsShouldIncludeMessage"/>
+        <exclude name="UnitTestContainsTooManyAsserts"/>
+        <exclude name="UnitTestShouldIncludeAssert"/>
+    </rule>
+
+</ruleset>

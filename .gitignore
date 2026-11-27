@@ -1,0 +1,18 @@
+# Artefatos de build
+target/
+
+# Dados de cobertura gerados pela extensão quarkus-jacoco
+jacoco-quarkus.exec
+*.exec
+
+# Arquivos de apoio gerados pelo plugin JaCoCo
+report-classes.txt
+report-sources.txt
+
+# IDEs
+.idea/
+*.iml
+.vscode/settings.json
+.classpath
+.project
+.settings/
